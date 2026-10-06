@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NBA Preseason Global Rating</title>
+<style>
+:root{color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;padding:0;background:#fff;
+  font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,
+  sans-serif;color:#1a1a2e}
+.wrap{max-width:640px;margin:0 auto;padding:2px}
+h2{margin:0 0 8px;font-size:17px;letter-spacing:-.2px}
+section{display:block;margin:0 0 26px}
+section > h3{margin:0 0 8px;font-size:15px;letter-spacing:-.1px;color:#1a1a2e;
+  font-weight:700;padding-bottom:4px;border-bottom:2px solid #ecedf3}
+section h4{margin:16px 0 5px;font-size:12px;color:#5a5a72;font-weight:700;
+  text-transform:uppercase;letter-spacing:.4px}
+/* EVERY TABLE THE SAME SHAPE.
+   With auto layout each table sizes itself to its own contents, so the Rookies
+   table put Player in a different place from the Top 30 and the eye had to find
+   the columns again at every heading. Fixed layout plus one set of widths makes
+   them all agree -- the name column is wide enough for the longest in the league,
+   and the numbers line up straight down the page. */
+table{border-collapse:collapse;width:100%;table-layout:fixed}
+/* Wide enough for three digits. A team table carries LEAGUE positions, so it
+   reaches 226 -- and at 30px those truncated to "1..." and "2...", which is worse
+   than no number at all. */
+col.c-rk{width:38px}
+col.c-fl{width:26px}
+col.c-pl{width:auto}
+/* Wide enough for a club name in full: "Maccabi Tel Aviv" needs it, and the
+   player column gives up the room, being the one set to auto. */
+col.c-tm{width:150px}
+/* THE LEAGUE PICKER: a plain bordered field, black on white.
+   LITERAL COLOURS ONLY. This stylesheet has no custom properties -- it is all
+   hex -- so an earlier rule asking for var(--ink) resolved to nothing and the
+   control disappeared. #1a1a2e is the sheet's body colour, #ecedf3 its rules. */
+.pick{margin:0 0 18px}
+.pick select{font:600 15px/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",
+  Roboto,Helvetica,Arial,sans-serif;
+  color:#1a1a2e;background:#fff;border:2px solid #1a1a2e;border-radius:6px;
+  padding:9px 14px;cursor:pointer;min-width:200px}
+.pick select:focus-visible{outline:3px solid #1a1a2e;outline-offset:2px}
+/* Hidden leagues are display:none rather than moved off-screen, so they cost
+   no height in an iframe that cannot resize itself. */
+.lg{display:none}
+.lg-on{display:block}
+col.c-rat{width:60px}
+col.c-gp{width:42px}
+col.c-num{width:52px}
+th,td{padding:5px 6px;border-bottom:1px solid #ecedf3;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+/* THE NAME WRAPS RATHER THAN TRUNCATES.
+   Everything else in the row is short and fixed, so the name is the only column
+   that can run out of room -- and on a phone it did, leaving "A'ja W..." and
+   "Jonqu...". A name is the one thing a reader cannot reconstruct from a
+   fragment, so it takes a second line instead of losing its end. */
+td.pl{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:#6a6a80;
+  text-align:right;border-bottom:1px solid #d8d9e3}
+th.l,td.l{text-align:left}
+td{text-align:right;font-variant-numeric:tabular-nums}
+/* Never clipped: a rank that reads "1..." could be 1, 14 or 226. */
+td.rk{color:#9a9ab0;font-size:12px;overflow:visible;text-overflow:clip}
+td.fl{width:1%;padding-right:0}
+td.fl img{display:block;width:19px;height:auto;border-radius:2px}
+td.pl{font-weight:600}
+td.tm{color:#5a5a72;font-size:12px;letter-spacing:.3px}
+td.rat{font-weight:700;color:#8a5a00}
+tr:nth-child(even) td{background:#fafafd}
+th[data-s]{cursor:pointer}
+th[data-s]:hover{color:#1a1a2e}
+th[aria-sort]{color:#8a5a00}
+th[aria-sort="descending"]::after{content:" ↓"}
+th[aria-sort="ascending"]::after{content:" ↑"}
+.none{color:#8a8aa0;font-size:12px;margin:4px 0 0}
+/* On a phone the numbers give up their padding first, so the name keeps as much
+   width as possible before it has to wrap at all. */
+@media(max-width:560px){
+  th,td{padding:5px 2px;font-size:13px}
+  col.c-rk{width:32px}
+  col.c-fl{width:22px}
+  col.c-tm{width:118px}
+  col.c-rat{width:48px}
+  col.c-gp{width:28px}
+  col.c-num{width:38px}
+  th{font-size:10px;letter-spacing:.2px}
+}
+@media(max-width:380px){
+  col.c-gp{width:24px}
+  col.c-num{width:34px}
+  th,td{font-size:12px}
+}
+</style></head><body><div class="wrap">
+<h2>NBA Preseason &mdash; Global Rating</h2>
+<section id="all"><h3>Top 30</h3><table><colgroup><col class="c-rk"><col class="c-fl"><col class="c-pl"><col class="c-tm"><col class="c-rat"><col class="c-gp"><col class="c-num"><col class="c-num"><col class="c-num"></colgroup><thead><tr>
+<th></th><th></th>
+<th class="l" data-s="t">Player</th><th class="l" data-s="t"></th>
+<th data-s="n">Rat</th><th data-s="n">GP</th><th data-s="n">Pts</th>
+<th data-s="n">Reb</th><th data-s="n">Ast</th>
+</tr></thead><tbody><tr><td class="rk">1</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jaylen Brown</td><td class="l tm">Philadelphia 76ers</td><td class="rat">20.79</td><td>1</td><td>22.0</td><td>2.0</td><td>2.0</td></tr>
+<tr><td class="rk">2</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Darius Garland</td><td class="l tm">LA Clippers</td><td class="rat">20.40</td><td>1</td><td>15.0</td><td>3.0</td><td>6.0</td></tr>
+<tr><td class="rk">3</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Cameron Carr</td><td class="l tm">Los Angeles Lakers</td><td class="rat">18.08</td><td>1</td><td>19.0</td><td>3.0</td><td>2.0</td></tr>
+<tr><td class="rk">4</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Caleb Love</td><td class="l tm">Philadelphia 76ers</td><td class="rat">17.94</td><td>1</td><td>15.0</td><td>3.0</td><td>6.0</td></tr>
+<tr><td class="rk">5</td><td class="fl"><img src="https://flagcdn.com/w40/jp.png" alt="" loading="lazy"></td><td class="l pl">Rui Hachimura</td><td class="l tm">LA Clippers</td><td class="rat">17.55</td><td>1</td><td>21.0</td><td>5.0</td><td>0.0</td></tr>
+<tr><td class="rk">6</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Antonio Reeves</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">17.36</td><td>1</td><td>12.0</td><td>3.0</td><td>2.0</td></tr>
+<tr><td class="rk">7</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Blake Hinson</td><td class="l tm">Utah Jazz</td><td class="rat">16.66</td><td>1</td><td>14.0</td><td>6.0</td><td>0.0</td></tr>
+<tr><td class="rk">8</td><td class="fl"><img src="https://flagcdn.com/w40/se.png" alt="" loading="lazy"></td><td class="l pl">Pelle Larsson</td><td class="l tm">Miami Heat</td><td class="rat">16.41</td><td>1</td><td>13.0</td><td>2.0</td><td>2.0</td></tr>
+<tr><td class="rk">9</td><td class="fl"><img src="https://flagcdn.com/w40/si.png" alt="" loading="lazy"></td><td class="l pl">Luka Doncic</td><td class="l tm">Los Angeles Lakers</td><td class="rat">15.45</td><td>1</td><td>21.0</td><td>2.0</td><td>3.0</td></tr>
+<tr><td class="rk">10</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Keyonte George</td><td class="l tm">Utah Jazz</td><td class="rat">15.00</td><td>1</td><td>15.0</td><td>4.0</td><td>3.0</td></tr>
+<tr><td class="rk">11</td><td class="fl"><img src="https://flagcdn.com/w40/bs.png" alt="" loading="lazy"></td><td class="l pl">VJ Edgecombe</td><td class="l tm">Philadelphia 76ers</td><td class="rat">14.97</td><td>1</td><td>12.0</td><td>4.0</td><td>7.0</td></tr>
+<tr><td class="rk">12</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Quentin Grimes</td><td class="l tm">Los Angeles Lakers</td><td class="rat">14.88</td><td>1</td><td>16.0</td><td>0.0</td><td>1.0</td></tr>
+<tr><td class="rk">13</td><td class="fl"><img src="https://flagcdn.com/w40/fi.png" alt="" loading="lazy"></td><td class="l pl">Lauri Markkanen</td><td class="l tm">Utah Jazz</td><td class="rat">14.87</td><td>1</td><td>17.0</td><td>2.0</td><td>0.0</td></tr>
+<tr><td class="rk">14</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jake LaRavia</td><td class="l tm">Los Angeles Lakers</td><td class="rat">14.53</td><td>1</td><td>12.0</td><td>3.0</td><td>2.0</td></tr>
+<tr><td class="rk">15</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Paul Reed</td><td class="l tm">Detroit Pistons</td><td class="rat">13.94</td><td>1</td><td>10.0</td><td>7.0</td><td>3.0</td></tr>
+<tr><td class="rk">16</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">GG Jackson</td><td class="l tm">Memphis Grizzlies</td><td class="rat">13.88</td><td>1</td><td>14.0</td><td>2.0</td><td>1.0</td></tr>
+<tr><td class="rk">17</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Nique Clifford</td><td class="l tm">Sacramento Kings</td><td class="rat">13.62</td><td>1</td><td>23.0</td><td>9.0</td><td>2.0</td></tr>
+<tr><td class="rk">18</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Isaiah Collier</td><td class="l tm">Utah Jazz</td><td class="rat">13.59</td><td>1</td><td>9.0</td><td>4.0</td><td>4.0</td></tr>
+<tr><td class="rk">19</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Ziaire Williams</td><td class="l tm">Los Angeles Lakers</td><td class="rat">13.27</td><td>1</td><td>13.0</td><td>1.0</td><td>1.0</td></tr>
+<tr><td class="rk">20</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Cameron Boozer</td><td class="l tm">Memphis Grizzlies</td><td class="rat">13.19</td><td>1</td><td>11.0</td><td>5.0</td><td>4.0</td></tr>
+<tr><td class="rk">21</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Ron Holland</td><td class="l tm">Detroit Pistons</td><td class="rat">13.12</td><td>1</td><td>14.0</td><td>4.0</td><td>1.0</td></tr>
+<tr><td class="rk">22</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Keaton Wagler</td><td class="l tm">LA Clippers</td><td class="rat">12.99</td><td>1</td><td>15.0</td><td>6.0</td><td>3.0</td></tr>
+<tr><td class="rk">23</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">LaMelo Ball</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">12.96</td><td>1</td><td>11.0</td><td>4.0</td><td>3.0</td></tr>
+<tr><td class="rk">24</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Ian Schieffelin</td><td class="l tm">Miami Heat</td><td class="rat">12.82</td><td>1</td><td>11.0</td><td>3.0</td><td>1.0</td></tr>
+<tr><td class="rk">25</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Tim Hardaway Jr</td><td class="l tm">Miami Heat</td><td class="rat">12.82</td><td>1</td><td>14.0</td><td>0.0</td><td>0.0</td></tr>
+<tr><td class="rk">26</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Saint Thomas</td><td class="l tm">Philadelphia 76ers</td><td class="rat">12.71</td><td>1</td><td>11.0</td><td>10.0</td><td>1.0</td></tr>
+<tr><td class="rk">27</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Ausar Thompson</td><td class="l tm">Detroit Pistons</td><td class="rat">12.53</td><td>1</td><td>10.0</td><td>2.0</td><td>2.0</td></tr>
+<tr><td class="rk">28</td><td class="fl"><img src="https://flagcdn.com/w40/gr.png" alt="" loading="lazy"></td><td class="l pl">Giannis Antetokounmpo</td><td class="l tm">Miami Heat</td><td class="rat">12.39</td><td>1</td><td>9.0</td><td>4.0</td><td>7.0</td></tr>
+<tr><td class="rk">29</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jabari Walker</td><td class="l tm">Philadelphia 76ers</td><td class="rat">11.76</td><td>1</td><td>11.0</td><td>11.0</td><td>1.0</td></tr>
+<tr><td class="rk">30</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Dillon Jones</td><td class="l tm">Philadelphia 76ers</td><td class="rat">11.64</td><td>1</td><td>11.0</td><td>6.0</td><td>2.0</td></tr></tbody></table></section>
+<section id="rookies"><h3>Rookies</h3><table><colgroup><col class="c-rk"><col class="c-fl"><col class="c-pl"><col class="c-tm"><col class="c-rat"><col class="c-gp"><col class="c-num"><col class="c-num"><col class="c-num"></colgroup><thead><tr>
+<th></th><th></th>
+<th class="l" data-s="t">Player</th><th class="l" data-s="t"></th>
+<th data-s="n">Rat</th><th data-s="n">GP</th><th data-s="n">Pts</th>
+<th data-s="n">Reb</th><th data-s="n">Ast</th>
+</tr></thead><tbody><tr><td class="rk">1</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Cameron Carr</td><td class="l tm">Los Angeles Lakers</td><td class="rat">18.08</td><td>1</td><td>19.0</td><td>3.0</td><td>2.0</td></tr>
+<tr><td class="rk">2</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Cameron Boozer</td><td class="l tm">Memphis Grizzlies</td><td class="rat">13.19</td><td>1</td><td>11.0</td><td>5.0</td><td>4.0</td></tr>
+<tr><td class="rk">3</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Keaton Wagler</td><td class="l tm">LA Clippers</td><td class="rat">12.99</td><td>1</td><td>15.0</td><td>6.0</td><td>3.0</td></tr>
+<tr><td class="rk">4</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Ian Schieffelin</td><td class="l tm">Miami Heat</td><td class="rat">12.82</td><td>1</td><td>11.0</td><td>3.0</td><td>1.0</td></tr>
+<tr><td class="rk">5</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Saint Thomas</td><td class="l tm">Philadelphia 76ers</td><td class="rat">12.71</td><td>1</td><td>11.0</td><td>10.0</td><td>1.0</td></tr>
+<tr><td class="rk">6</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Carson Cooper</td><td class="l tm">Memphis Grizzlies</td><td class="rat">9.33</td><td>1</td><td>8.0</td><td>4.0</td><td>1.0</td></tr>
+<tr><td class="rk">7</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Ebuka Okorie</td><td class="l tm">Detroit Pistons</td><td class="rat">8.27</td><td>1</td><td>7.0</td><td>1.0</td><td>1.0</td></tr>
+<tr><td class="rk">8</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Darius Acuff</td><td class="l tm">Sacramento Kings</td><td class="rat">6.96</td><td>1</td><td>19.0</td><td>2.0</td><td>4.0</td></tr>
+<tr><td class="rk">9</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Graham Ike</td><td class="l tm">Golden State Warriors</td><td class="rat">6.78</td><td>1</td><td>11.0</td><td>5.0</td><td>1.0</td></tr>
+<tr><td class="rk">10</td><td class="fl"><img src="https://flagcdn.com/w40/es.png" alt="" loading="lazy"></td><td class="l pl">Baba Miller</td><td class="l tm">LA Clippers</td><td class="rat">6.27</td><td>1</td><td>9.0</td><td>6.0</td><td>0.0</td></tr>
+<tr><td class="rk">11</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Tyreke Key</td><td class="l tm">Toronto Raptors</td><td class="rat">6.12</td><td>1</td><td>15.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">12</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jaden Bradley</td><td class="l tm">Toronto Raptors</td><td class="rat">5.77</td><td>1</td><td>9.0</td><td>3.0</td><td>2.0</td></tr>
+<tr><td class="rk">13</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Trevon Brazile</td><td class="l tm">Denver Nuggets</td><td class="rat">5.17</td><td>1</td><td>7.0</td><td>3.0</td><td>0.0</td></tr>
+<tr><td class="rk">14</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jameer Nelson Jr</td><td class="l tm">Philadelphia 76ers</td><td class="rat">5.11</td><td>1</td><td>7.0</td><td>2.0</td><td>0.0</td></tr>
+<tr><td class="rk">15</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">J'Vonne Hadley</td><td class="l tm">Miami Heat</td><td class="rat">4.89</td><td>1</td><td>2.0</td><td>6.0</td><td>0.0</td></tr></tbody></table></section>
+<section id="intl"><h3>International</h3><table><colgroup><col class="c-rk"><col class="c-fl"><col class="c-pl"><col class="c-tm"><col class="c-rat"><col class="c-gp"><col class="c-num"><col class="c-num"><col class="c-num"></colgroup><thead><tr>
+<th></th><th></th>
+<th class="l" data-s="t">Player</th><th class="l" data-s="t"></th>
+<th data-s="n">Rat</th><th data-s="n">GP</th><th data-s="n">Pts</th>
+<th data-s="n">Reb</th><th data-s="n">Ast</th>
+</tr></thead><tbody><tr><td class="rk">1</td><td class="fl"><img src="https://flagcdn.com/w40/jp.png" alt="" loading="lazy"></td><td class="l pl">Rui Hachimura</td><td class="l tm">LA Clippers</td><td class="rat">17.55</td><td>1</td><td>21.0</td><td>5.0</td><td>0.0</td></tr>
+<tr><td class="rk">2</td><td class="fl"><img src="https://flagcdn.com/w40/se.png" alt="" loading="lazy"></td><td class="l pl">Pelle Larsson</td><td class="l tm">Miami Heat</td><td class="rat">16.41</td><td>1</td><td>13.0</td><td>2.0</td><td>2.0</td></tr>
+<tr><td class="rk">3</td><td class="fl"><img src="https://flagcdn.com/w40/si.png" alt="" loading="lazy"></td><td class="l pl">Luka Doncic</td><td class="l tm">Los Angeles Lakers</td><td class="rat">15.45</td><td>1</td><td>21.0</td><td>2.0</td><td>3.0</td></tr>
+<tr><td class="rk">4</td><td class="fl"><img src="https://flagcdn.com/w40/bs.png" alt="" loading="lazy"></td><td class="l pl">VJ Edgecombe</td><td class="l tm">Philadelphia 76ers</td><td class="rat">14.97</td><td>1</td><td>12.0</td><td>4.0</td><td>7.0</td></tr>
+<tr><td class="rk">5</td><td class="fl"><img src="https://flagcdn.com/w40/fi.png" alt="" loading="lazy"></td><td class="l pl">Lauri Markkanen</td><td class="l tm">Utah Jazz</td><td class="rat">14.87</td><td>1</td><td>17.0</td><td>2.0</td><td>0.0</td></tr>
+<tr><td class="rk">6</td><td class="fl"><img src="https://flagcdn.com/w40/gr.png" alt="" loading="lazy"></td><td class="l pl">Giannis Antetokounmpo</td><td class="l tm">Miami Heat</td><td class="rat">12.39</td><td>1</td><td>9.0</td><td>4.0</td><td>7.0</td></tr>
+<tr><td class="rk">7</td><td class="fl"><img src="https://flagcdn.com/w40/ca.png" alt="" loading="lazy"></td><td class="l pl">Andrew Wiggins</td><td class="l tm">Miami Heat</td><td class="rat">10.76</td><td>1</td><td>12.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">8</td><td class="fl"><img src="https://flagcdn.com/w40/rs.png" alt="" loading="lazy"></td><td class="l pl">Nikola Jovic</td><td class="l tm">Miami Heat</td><td class="rat">10.00</td><td>1</td><td>11.0</td><td>7.0</td><td>4.0</td></tr>
+<tr><td class="rk">9</td><td class="fl"><img src="https://flagcdn.com/w40/fr.png" alt="" loading="lazy"></td><td class="l pl">Joan Beringer</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">8.92</td><td>1</td><td>12.0</td><td>7.0</td><td>0.0</td></tr>
+<tr><td class="rk">10</td><td class="fl"><img src="https://flagcdn.com/w40/gb.png" alt="" loading="lazy"></td><td class="l pl">OG Anunoby</td><td class="l tm">New York Knicks</td><td class="rat">8.29</td><td>1</td><td>12.0</td><td>6.0</td><td>0.0</td></tr>
+<tr><td class="rk">11</td><td class="fl"><img src="https://flagcdn.com/w40/ca.png" alt="" loading="lazy"></td><td class="l pl">Nickeil Alexander-Walker</td><td class="l tm">Atlanta Hawks</td><td class="rat">8.01</td><td>1</td><td>14.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">12</td><td class="fl"><img src="https://flagcdn.com/w40/ba.png" alt="" loading="lazy"></td><td class="l pl">Jusuf Nurkic</td><td class="l tm">Utah Jazz</td><td class="rat">7.69</td><td>1</td><td>4.0</td><td>5.0</td><td>4.0</td></tr>
+<tr><td class="rk">13</td><td class="fl"><img src="https://flagcdn.com/w40/ua.png" alt="" loading="lazy"></td><td class="l pl">Sviatoslav Mykhailiuk</td><td class="l tm">Utah Jazz</td><td class="rat">7.69</td><td>1</td><td>9.0</td><td>0.0</td><td>3.0</td></tr>
+<tr><td class="rk">14</td><td class="fl"><img src="https://flagcdn.com/w40/nl.png" alt="" loading="lazy"></td><td class="l pl">Quinten Post</td><td class="l tm">Memphis Grizzlies</td><td class="rat">7.51</td><td>1</td><td>8.0</td><td>4.0</td><td>0.0</td></tr>
+<tr><td class="rk">15</td><td class="fl"><img src="https://flagcdn.com/w40/ca.png" alt="" loading="lazy"></td><td class="l pl">RJ Barrett</td><td class="l tm">Toronto Raptors</td><td class="rat">7.44</td><td>1</td><td>15.0</td><td>3.0</td><td>1.0</td></tr></tbody></table></section>
+<section id="bench"><h3>Off the Bench</h3><table><colgroup><col class="c-rk"><col class="c-fl"><col class="c-pl"><col class="c-tm"><col class="c-rat"><col class="c-gp"><col class="c-num"><col class="c-num"><col class="c-num"></colgroup><thead><tr>
+<th></th><th></th>
+<th class="l" data-s="t">Player</th><th class="l" data-s="t"></th>
+<th data-s="n">Rat</th><th data-s="n">GP</th><th data-s="n">Pts</th>
+<th data-s="n">Reb</th><th data-s="n">Ast</th>
+</tr></thead><tbody><tr><td class="rk">1</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jaylen Brown</td><td class="l tm">Philadelphia 76ers</td><td class="rat">20.79</td><td>1</td><td>22.0</td><td>2.0</td><td>2.0</td></tr>
+<tr><td class="rk">2</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Darius Garland</td><td class="l tm">LA Clippers</td><td class="rat">20.40</td><td>1</td><td>15.0</td><td>3.0</td><td>6.0</td></tr>
+<tr><td class="rk">3</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Cameron Carr</td><td class="l tm">Los Angeles Lakers</td><td class="rat">18.08</td><td>1</td><td>19.0</td><td>3.0</td><td>2.0</td></tr>
+<tr><td class="rk">4</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Caleb Love</td><td class="l tm">Philadelphia 76ers</td><td class="rat">17.94</td><td>1</td><td>15.0</td><td>3.0</td><td>6.0</td></tr>
+<tr><td class="rk">5</td><td class="fl"><img src="https://flagcdn.com/w40/jp.png" alt="" loading="lazy"></td><td class="l pl">Rui Hachimura</td><td class="l tm">LA Clippers</td><td class="rat">17.55</td><td>1</td><td>21.0</td><td>5.0</td><td>0.0</td></tr>
+<tr><td class="rk">6</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Antonio Reeves</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">17.36</td><td>1</td><td>12.0</td><td>3.0</td><td>2.0</td></tr>
+<tr><td class="rk">7</td><td class="fl"><img src="https://flagcdn.com/w40/si.png" alt="" loading="lazy"></td><td class="l pl">Luka Doncic</td><td class="l tm">Los Angeles Lakers</td><td class="rat">15.45</td><td>1</td><td>21.0</td><td>2.0</td><td>3.0</td></tr>
+<tr><td class="rk">8</td><td class="fl"><img src="https://flagcdn.com/w40/bs.png" alt="" loading="lazy"></td><td class="l pl">VJ Edgecombe</td><td class="l tm">Philadelphia 76ers</td><td class="rat">14.97</td><td>1</td><td>12.0</td><td>4.0</td><td>7.0</td></tr>
+<tr><td class="rk">9</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Quentin Grimes</td><td class="l tm">Los Angeles Lakers</td><td class="rat">14.88</td><td>1</td><td>16.0</td><td>0.0</td><td>1.0</td></tr>
+<tr><td class="rk">10</td><td class="fl"><img src="https://flagcdn.com/w40/fi.png" alt="" loading="lazy"></td><td class="l pl">Lauri Markkanen</td><td class="l tm">Utah Jazz</td><td class="rat">14.87</td><td>1</td><td>17.0</td><td>2.0</td><td>0.0</td></tr>
+<tr><td class="rk">11</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Paul Reed</td><td class="l tm">Detroit Pistons</td><td class="rat">13.94</td><td>1</td><td>10.0</td><td>7.0</td><td>3.0</td></tr>
+<tr><td class="rk">12</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">GG Jackson</td><td class="l tm">Memphis Grizzlies</td><td class="rat">13.88</td><td>1</td><td>14.0</td><td>2.0</td><td>1.0</td></tr>
+<tr><td class="rk">13</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">LaMelo Ball</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">12.96</td><td>1</td><td>11.0</td><td>4.0</td><td>3.0</td></tr>
+<tr><td class="rk">14</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Tim Hardaway Jr</td><td class="l tm">Miami Heat</td><td class="rat">12.82</td><td>1</td><td>14.0</td><td>0.0</td><td>0.0</td></tr>
+<tr><td class="rk">15</td><td class="fl"><img src="https://flagcdn.com/w40/gr.png" alt="" loading="lazy"></td><td class="l pl">Giannis Antetokounmpo</td><td class="l tm">Miami Heat</td><td class="rat">12.39</td><td>1</td><td>9.0</td><td>4.0</td><td>7.0</td></tr></tbody></table></section>
+<section id="tm-atlanta-hawks"><h3>Atlanta Hawks</h3><table><colgroup><col class="c-rk"><col class="c-fl"><col class="c-pl"><col class="c-tm"><col class="c-rat"><col class="c-gp"><col class="c-num"><col class="c-num"><col class="c-num"></colgroup><thead><tr>
+<th></th><th></th>
+<th class="l" data-s="t">Player</th><th class="l" data-s="t"></th>
+<th data-s="n">Rat</th><th data-s="n">GP</th><th data-s="n">Pts</th>
+<th data-s="n">Reb</th><th data-s="n">Ast</th>
+</tr></thead><tbody><tr><td class="rk">1</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Corey Kispert</td><td class="l tm">Atlanta Hawks</td><td class="rat">10.99</td><td>1</td><td>19.0</td><td>4.0</td><td>2.0</td></tr>
+<tr><td class="rk">2</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Asa Newell</td><td class="l tm">Atlanta Hawks</td><td class="rat">10.41</td><td>1</td><td>12.0</td><td>12.0</td><td>2.0</td></tr>
+<tr><td class="rk">3</td><td class="fl"><img src="https://flagcdn.com/w40/ca.png" alt="" loading="lazy"></td><td class="l pl">Nickeil Alexander-Walker</td><td class="l tm">Atlanta Hawks</td><td class="rat">8.01</td><td>1</td><td>14.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">4</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jalen Wilson</td><td class="l tm">Atlanta Hawks</td><td class="rat">6.11</td><td>1</td><td>12.0</td><td>0.0</td><td>0.0</td></tr>
+<tr><td class="rk">5</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">RayJ Dennis</td><td class="l tm">Atlanta Hawks</td><td class="rat">5.97</td><td>1</td><td>12.0</td><td>3.0</td><td>3.0</td></tr>
+<tr><td class="rk">6</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Onyeka Okongwu</td><td class="l tm">Atlanta Hawks</td><td class="rat">5.68</td><td>1</td><td>8.0</td><td>4.0</td><td>2.0</td></tr>
+<tr><td class="rk">7</td><td class="fl"><img src="https://flagcdn.com/w40/au.png" alt="" loading="lazy"></td><td class="l pl">Jock Landale</td><td class="l tm">Atlanta Hawks</td><td class="rat">4.66</td><td>1</td><td>4.0</td><td>6.0</td><td>3.0</td></tr>
+<tr><td class="rk">8</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jalen Johnson</td><td class="l tm">Atlanta Hawks</td><td class="rat">4.44</td><td>1</td><td>8.0</td><td>5.0</td><td>3.0</td></tr>
+<tr><td class="rk">9</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Aaron Wiggins</td><td class="l tm">Atlanta Hawks</td><td class="rat">3.06</td><td>1</td><td>7.0</td><td>0.0</td><td>0.0</td></tr>
+<tr><td class="rk">10</td><td class="fl"><img src="https://flagcdn.com/w40/au.png" alt="" loading="lazy"></td><td class="l pl">Dyson Daniels</td><td class="l tm">Atlanta Hawks</td><td class="rat">2.47</td><td>1</td><td>6.0</td><td>4.0</td><td>2.0</td></tr>
+<tr><td class="rk">11</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Zuby Ejiofor</td><td class="l tm">Atlanta Hawks</td><td class="rat">2.47</td><td>1</td><td>5.0</td><td>3.0</td><td>2.0</td></tr>
+<tr><td class="rk">12</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Dorian Finney-Smith</td><td class="l tm">Atlanta Hawks</td><td class="rat">1.16</td><td>1</td><td>3.0</td><td>0.0</td><td>1.0</td></tr>
+<tr><td class="rk">13</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Kobe Johnson</td><td class="l tm">Atlanta Hawks</td><td class="rat">0.95</td><td>1</td><td>0.0</td><td>0.0</td><td>1.0</td></tr>
+<tr><td class="rk">14</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Kingston Flemings</td><td class="l tm">Atlanta Hawks</td><td class="rat">0.66</td><td>1</td><td>11.0</td><td>0.0</td><td>2.0</td></tr>
+<tr><td class="rk">15</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Cameron Corhen</td><td class="l tm">Atlanta Hawks</td><td class="rat">0.22</td><td>1</td><td>0.0</td><td>2.0</td><td>0.0</td></tr>
+<tr><td class="rk">16</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Keshon Gilbert</td><td class="l tm">Atlanta Hawks</td><td class="rat">0.00</td><td>1</td><td>2.0</td><td>1.0</td><td>2.0</td></tr></tbody></table></section>
+<section id="tm-denver-nuggets"><h3>Denver Nuggets</h3><table><colgroup><col class="c-rk"><col class="c-fl"><col class="c-pl"><col class="c-tm"><col class="c-rat"><col class="c-gp"><col class="c-num"><col class="c-num"><col class="c-num"></colgroup><thead><tr>
+<th></th><th></th>
+<th class="l" data-s="t">Player</th><th class="l" data-s="t"></th>
+<th data-s="n">Rat</th><th data-s="n">GP</th><th data-s="n">Pts</th>
+<th data-s="n">Reb</th><th data-s="n">Ast</th>
+</tr></thead><tbody><tr><td class="rk">1</td><td class="fl"><img src="https://flagcdn.com/w40/rs.png" alt="" loading="lazy"></td><td class="l pl">Nikola Jokic</td><td class="l tm">Denver Nuggets</td><td class="rat">7.30</td><td>1</td><td>3.0</td><td>3.0</td><td>7.0</td></tr>
+<tr><td class="rk">2</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Aaron Gordon</td><td class="l tm">Denver Nuggets</td><td class="rat">6.23</td><td>1</td><td>12.0</td><td>4.0</td><td>0.0</td></tr>
+<tr><td class="rk">3</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Tyus Jones</td><td class="l tm">Denver Nuggets</td><td class="rat">6.07</td><td>1</td><td>8.0</td><td>2.0</td><td>6.0</td></tr>
+<tr><td class="rk">4</td><td class="fl"><img src="https://flagcdn.com/w40/pr.png" alt="" loading="lazy"></td><td class="l pl">Julian Strawther</td><td class="l tm">Denver Nuggets</td><td class="rat">5.82</td><td>1</td><td>14.0</td><td>3.0</td><td>1.0</td></tr>
+<tr><td class="rk">5</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Trevon Brazile</td><td class="l tm">Denver Nuggets</td><td class="rat">5.17</td><td>1</td><td>7.0</td><td>3.0</td><td>0.0</td></tr>
+<tr><td class="rk">6</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Cameron Johnson</td><td class="l tm">Denver Nuggets</td><td class="rat">4.35</td><td>1</td><td>8.0</td><td>2.0</td><td>0.0</td></tr>
+<tr><td class="rk">7</td><td class="fl"><img src="https://flagcdn.com/w40/ca.png" alt="" loading="lazy"></td><td class="l pl">Ryan Nembhard</td><td class="l tm">Denver Nuggets</td><td class="rat">4.35</td><td>1</td><td>5.0</td><td>3.0</td><td>4.0</td></tr>
+<tr><td class="rk">8</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Christian Braun</td><td class="l tm">Denver Nuggets</td><td class="rat">4.02</td><td>1</td><td>6.0</td><td>3.0</td><td>1.0</td></tr>
+<tr><td class="rk">9</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Lonnie Walker</td><td class="l tm">Denver Nuggets</td><td class="rat">3.69</td><td>1</td><td>3.0</td><td>3.0</td><td>2.0</td></tr>
+<tr><td class="rk">10</td><td class="fl"><img src="https://flagcdn.com/w40/ca.png" alt="" loading="lazy"></td><td class="l pl">Emanuel Miller</td><td class="l tm">Denver Nuggets</td><td class="rat">3.61</td><td>1</td><td>5.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">11</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">DeMar DeRozan</td><td class="l tm">Denver Nuggets</td><td class="rat">3.20</td><td>1</td><td>5.0</td><td>1.0</td><td>1.0</td></tr>
+<tr><td class="rk">12</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Cam Whitmore</td><td class="l tm">Denver Nuggets</td><td class="rat">2.30</td><td>1</td><td>6.0</td><td>2.0</td><td>1.0</td></tr>
+<tr><td class="rk">13</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">DaRon Holmes</td><td class="l tm">Denver Nuggets</td><td class="rat">1.48</td><td>1</td><td>4.0</td><td>1.0</td><td>1.0</td></tr>
+<tr><td class="rk">14</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Alpha Diallo</td><td class="l tm">Denver Nuggets</td><td class="rat">1.23</td><td>1</td><td>2.0</td><td>3.0</td><td>2.0</td></tr>
+<tr><td class="rk">15</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Marvin Bagley</td><td class="l tm">Denver Nuggets</td><td class="rat">1.15</td><td>1</td><td>5.0</td><td>7.0</td><td>0.0</td></tr>
+<tr><td class="rk">16</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Bryce Hopkins</td><td class="l tm">Denver Nuggets</td><td class="rat">0.66</td><td>1</td><td>1.0</td><td>2.0</td><td>0.0</td></tr>
+<tr><td class="rk">17</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Dane Goodwin</td><td class="l tm">Denver Nuggets</td><td class="rat">0.25</td><td>1</td><td>0.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">18</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Coleman Hawkins</td><td class="l tm">Denver Nuggets</td><td class="rat">-0.57</td><td>1</td><td>0.0</td><td>0.0</td><td>0.0</td></tr>
+<tr><td class="rk">19</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Zeke Nnaji</td><td class="l tm">Denver Nuggets</td><td class="rat">-0.66</td><td>1</td><td>3.0</td><td>3.0</td><td>1.0</td></tr></tbody></table></section>
+<section id="tm-detroit-pistons"><h3>Detroit Pistons</h3><table><colgroup><col class="c-rk"><col class="c-fl"><col class="c-pl"><col class="c-tm"><col class="c-rat"><col class="c-gp"><col class="c-num"><col class="c-num"><col class="c-num"></colgroup><thead><tr>
+<th></th><th></th>
+<th class="l" data-s="t">Player</th><th class="l" data-s="t"></th>
+<th data-s="n">Rat</th><th data-s="n">GP</th><th data-s="n">Pts</th>
+<th data-s="n">Reb</th><th data-s="n">Ast</th>
+</tr></thead><tbody><tr><td class="rk">1</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Paul Reed</td><td class="l tm">Detroit Pistons</td><td class="rat">13.94</td><td>1</td><td>10.0</td><td>7.0</td><td>3.0</td></tr>
+<tr><td class="rk">2</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Ron Holland</td><td class="l tm">Detroit Pistons</td><td class="rat">13.12</td><td>1</td><td>14.0</td><td>4.0</td><td>1.0</td></tr>
+<tr><td class="rk">3</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Ausar Thompson</td><td class="l tm">Detroit Pistons</td><td class="rat">12.53</td><td>1</td><td>10.0</td><td>2.0</td><td>2.0</td></tr>
+<tr><td class="rk">4</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">John Collins</td><td class="l tm">Detroit Pistons</td><td class="rat">8.98</td><td>1</td><td>10.0</td><td>3.0</td><td>0.0</td></tr>
+<tr><td class="rk">5</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Ebuka Okorie</td><td class="l tm">Detroit Pistons</td><td class="rat">8.27</td><td>1</td><td>7.0</td><td>1.0</td><td>1.0</td></tr>
+<tr><td class="rk">6</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Cade Cunningham</td><td class="l tm">Detroit Pistons</td><td class="rat">7.68</td><td>1</td><td>10.0</td><td>2.0</td><td>1.0</td></tr>
+<tr><td class="rk">7</td><td class="fl"><img src="https://flagcdn.com/w40/me.png" alt="" loading="lazy"></td><td class="l pl">Javonte Green</td><td class="l tm">Detroit Pistons</td><td class="rat">6.97</td><td>1</td><td>6.0</td><td>1.0</td><td>1.0</td></tr>
+<tr><td class="rk">8</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Isaac Jones</td><td class="l tm">Detroit Pistons</td><td class="rat">4.73</td><td>1</td><td>5.0</td><td>2.0</td><td>0.0</td></tr>
+<tr><td class="rk">9</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Duncan Robinson</td><td class="l tm">Detroit Pistons</td><td class="rat">4.61</td><td>1</td><td>9.0</td><td>0.0</td><td>1.0</td></tr>
+<tr><td class="rk">10</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Kevin Huerter</td><td class="l tm">Detroit Pistons</td><td class="rat">4.02</td><td>1</td><td>4.0</td><td>0.0</td><td>0.0</td></tr>
+<tr><td class="rk">11</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Brice Williams</td><td class="l tm">Detroit Pistons</td><td class="rat">3.55</td><td>1</td><td>3.0</td><td>0.0</td><td>1.0</td></tr>
+<tr><td class="rk">12</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Daniss Jenkins</td><td class="l tm">Detroit Pistons</td><td class="rat">3.43</td><td>1</td><td>5.0</td><td>2.0</td><td>4.0</td></tr>
+<tr><td class="rk">13</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Chaz Lanier</td><td class="l tm">Detroit Pistons</td><td class="rat">3.19</td><td>1</td><td>5.0</td><td>3.0</td><td>0.0</td></tr>
+<tr><td class="rk">14</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Isaiah Joe</td><td class="l tm">Detroit Pistons</td><td class="rat">2.72</td><td>1</td><td>7.0</td><td>2.0</td><td>1.0</td></tr>
+<tr><td class="rk">15</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Taurean Prince</td><td class="l tm">Detroit Pistons</td><td class="rat">1.42</td><td>1</td><td>3.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">16</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Tolu Smith</td><td class="l tm">Detroit Pistons</td><td class="rat">-0.00</td><td>1</td><td>1.0</td><td>5.0</td><td>1.0</td></tr></tbody></table></section>
+<section id="tm-golden-state-warriors"><h3>Golden State Warriors</h3><table><colgroup><col class="c-rk"><col class="c-fl"><col class="c-pl"><col class="c-tm"><col class="c-rat"><col class="c-gp"><col class="c-num"><col class="c-num"><col class="c-num"></colgroup><thead><tr>
+<th></th><th></th>
+<th class="l" data-s="t">Player</th><th class="l" data-s="t"></th>
+<th data-s="n">Rat</th><th data-s="n">GP</th><th data-s="n">Pts</th>
+<th data-s="n">Reb</th><th data-s="n">Ast</th>
+</tr></thead><tbody><tr><td class="rk">1</td><td class="fl"><img src="https://flagcdn.com/w40/ng.png" alt="" loading="lazy"></td><td class="l pl">Charles Bassey</td><td class="l tm">Golden State Warriors</td><td class="rat">7.22</td><td>1</td><td>12.0</td><td>8.0</td><td>1.0</td></tr>
+<tr><td class="rk">2</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Stephen Curry</td><td class="l tm">Golden State Warriors</td><td class="rat">6.86</td><td>1</td><td>10.0</td><td>2.0</td><td>2.0</td></tr>
+<tr><td class="rk">3</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Graham Ike</td><td class="l tm">Golden State Warriors</td><td class="rat">6.78</td><td>1</td><td>11.0</td><td>5.0</td><td>1.0</td></tr>
+<tr><td class="rk">4</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Brandon Williams</td><td class="l tm">Golden State Warriors</td><td class="rat">6.27</td><td>1</td><td>11.0</td><td>2.0</td><td>3.0</td></tr>
+<tr><td class="rk">5</td><td class="fl"><img src="https://flagcdn.com/w40/nl.png" alt="" loading="lazy"></td><td class="l pl">Malevy Leons</td><td class="l tm">Golden State Warriors</td><td class="rat">5.11</td><td>1</td><td>8.0</td><td>2.0</td><td>1.0</td></tr>
+<tr><td class="rk">6</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Draymond Green</td><td class="l tm">Golden State Warriors</td><td class="rat">4.30</td><td>1</td><td>2.0</td><td>2.0</td><td>2.0</td></tr>
+<tr><td class="rk">7</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Gary Payton II</td><td class="l tm">Golden State Warriors</td><td class="rat">3.79</td><td>1</td><td>6.0</td><td>0.0</td><td>1.0</td></tr>
+<tr><td class="rk">8</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Dalen Terry</td><td class="l tm">Golden State Warriors</td><td class="rat">3.72</td><td>1</td><td>5.0</td><td>5.0</td><td>2.0</td></tr>
+<tr><td class="rk">9</td><td class="fl"><img src="https://flagcdn.com/w40/do.png" alt="" loading="lazy"></td><td class="l pl">Yaxel Lendeborg</td><td class="l tm">Golden State Warriors</td><td class="rat">3.21</td><td>1</td><td>4.0</td><td>9.0</td><td>3.0</td></tr>
+<tr><td class="rk">10</td><td class="fl"><img src="https://flagcdn.com/w40/br.png" alt="" loading="lazy"></td><td class="l pl">Gui Santos</td><td class="l tm">Golden State Warriors</td><td class="rat">2.99</td><td>1</td><td>9.0</td><td>4.0</td><td>0.0</td></tr>
+<tr><td class="rk">11</td><td class="fl"><img src="https://flagcdn.com/w40/au.png" alt="" loading="lazy"></td><td class="l pl">Alex Toohey</td><td class="l tm">Golden State Warriors</td><td class="rat">2.84</td><td>1</td><td>2.0</td><td>0.0</td><td>1.0</td></tr>
+<tr><td class="rk">12</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Brandin Podziemski</td><td class="l tm">Golden State Warriors</td><td class="rat">1.17</td><td>1</td><td>7.0</td><td>2.0</td><td>2.0</td></tr>
+<tr><td class="rk">13</td><td class="fl"><img src="https://flagcdn.com/w40/do.png" alt="" loading="lazy"></td><td class="l pl">Al Horford</td><td class="l tm">Golden State Warriors</td><td class="rat">0.07</td><td>1</td><td>3.0</td><td>3.0</td><td>1.0</td></tr>
+<tr><td class="rk">14</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Georges Niang</td><td class="l tm">Golden State Warriors</td><td class="rat">0.00</td><td>1</td><td>4.0</td><td>2.0</td><td>0.0</td></tr>
+<tr><td class="rk">15</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Will Richard</td><td class="l tm">Golden State Warriors</td><td class="rat">-0.22</td><td>1</td><td>2.0</td><td>2.0</td><td>0.0</td></tr>
+<tr><td class="rk">16</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">De'Anthony Melton</td><td class="l tm">Golden State Warriors</td><td class="rat">-0.36</td><td>1</td><td>2.0</td><td>1.0</td><td>2.0</td></tr>
+<tr><td class="rk">17</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">LJ Cryer</td><td class="l tm">Golden State Warriors</td><td class="rat">-1.09</td><td>1</td><td>1.0</td><td>0.0</td><td>0.0</td></tr>
+<tr><td class="rk">18</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Miles Kelly</td><td class="l tm">Golden State Warriors</td><td class="rat">-1.09</td><td>1</td><td>2.0</td><td>0.0</td><td>1.0</td></tr></tbody></table></section>
+<section id="tm-la-clippers"><h3>LA Clippers</h3><table><colgroup><col class="c-rk"><col class="c-fl"><col class="c-pl"><col class="c-tm"><col class="c-rat"><col class="c-gp"><col class="c-num"><col class="c-num"><col class="c-num"></colgroup><thead><tr>
+<th></th><th></th>
+<th class="l" data-s="t">Player</th><th class="l" data-s="t"></th>
+<th data-s="n">Rat</th><th data-s="n">GP</th><th data-s="n">Pts</th>
+<th data-s="n">Reb</th><th data-s="n">Ast</th>
+</tr></thead><tbody><tr><td class="rk">1</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Darius Garland</td><td class="l tm">LA Clippers</td><td class="rat">20.40</td><td>1</td><td>15.0</td><td>3.0</td><td>6.0</td></tr>
+<tr><td class="rk">2</td><td class="fl"><img src="https://flagcdn.com/w40/jp.png" alt="" loading="lazy"></td><td class="l pl">Rui Hachimura</td><td class="l tm">LA Clippers</td><td class="rat">17.55</td><td>1</td><td>21.0</td><td>5.0</td><td>0.0</td></tr>
+<tr><td class="rk">3</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Keaton Wagler</td><td class="l tm">LA Clippers</td><td class="rat">12.99</td><td>1</td><td>15.0</td><td>6.0</td><td>3.0</td></tr>
+<tr><td class="rk">4</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Blake Wesley</td><td class="l tm">LA Clippers</td><td class="rat">8.09</td><td>1</td><td>8.0</td><td>3.0</td><td>1.0</td></tr>
+<tr><td class="rk">5</td><td class="fl"><img src="https://flagcdn.com/w40/es.png" alt="" loading="lazy"></td><td class="l pl">Baba Miller</td><td class="l tm">LA Clippers</td><td class="rat">6.27</td><td>1</td><td>9.0</td><td>6.0</td><td>0.0</td></tr>
+<tr><td class="rk">6</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Isaiah Jackson</td><td class="l tm">LA Clippers</td><td class="rat">5.93</td><td>1</td><td>4.0</td><td>4.0</td><td>3.0</td></tr>
+<tr><td class="rk">7</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Cam Christie</td><td class="l tm">LA Clippers</td><td class="rat">3.08</td><td>1</td><td>8.0</td><td>8.0</td><td>3.0</td></tr>
+<tr><td class="rk">8</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Kris Dunn</td><td class="l tm">LA Clippers</td><td class="rat">2.85</td><td>1</td><td>3.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">9</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Gradey Dick</td><td class="l tm">LA Clippers</td><td class="rat">2.28</td><td>1</td><td>4.0</td><td>6.0</td><td>1.0</td></tr>
+<tr><td class="rk">10</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Derrick Jones</td><td class="l tm">LA Clippers</td><td class="rat">2.17</td><td>1</td><td>6.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">11</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Nick Martinelli</td><td class="l tm">LA Clippers</td><td class="rat">1.48</td><td>1</td><td>5.0</td><td>2.0</td><td>1.0</td></tr>
+<tr><td class="rk">12</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jalen Pickett</td><td class="l tm">LA Clippers</td><td class="rat">-0.23</td><td>1</td><td>4.0</td><td>2.0</td><td>0.0</td></tr>
+<tr><td class="rk">13</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Max Strus</td><td class="l tm">LA Clippers</td><td class="rat">-0.46</td><td>1</td><td>0.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">14</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Fletcher Loyer</td><td class="l tm">LA Clippers</td><td class="rat">-0.91</td><td>1</td><td>0.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">15</td><td class="fl"><img src="https://flagcdn.com/w40/jp.png" alt="" loading="lazy"></td><td class="l pl">Yuki Kawamura</td><td class="l tm">LA Clippers</td><td class="rat">-2.05</td><td>1</td><td>1.0</td><td>0.0</td><td>0.0</td></tr>
+<tr><td class="rk">16</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Brook Lopez</td><td class="l tm">LA Clippers</td><td class="rat">-3.08</td><td>1</td><td>1.0</td><td>3.0</td><td>0.0</td></tr></tbody></table></section>
+<section id="tm-los-angeles-lakers"><h3>Los Angeles Lakers</h3><table><colgroup><col class="c-rk"><col class="c-fl"><col class="c-pl"><col class="c-tm"><col class="c-rat"><col class="c-gp"><col class="c-num"><col class="c-num"><col class="c-num"></colgroup><thead><tr>
+<th></th><th></th>
+<th class="l" data-s="t">Player</th><th class="l" data-s="t"></th>
+<th data-s="n">Rat</th><th data-s="n">GP</th><th data-s="n">Pts</th>
+<th data-s="n">Reb</th><th data-s="n">Ast</th>
+</tr></thead><tbody><tr><td class="rk">1</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Cameron Carr</td><td class="l tm">Los Angeles Lakers</td><td class="rat">18.08</td><td>1</td><td>19.0</td><td>3.0</td><td>2.0</td></tr>
+<tr><td class="rk">2</td><td class="fl"><img src="https://flagcdn.com/w40/si.png" alt="" loading="lazy"></td><td class="l pl">Luka Doncic</td><td class="l tm">Los Angeles Lakers</td><td class="rat">15.45</td><td>1</td><td>21.0</td><td>2.0</td><td>3.0</td></tr>
+<tr><td class="rk">3</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Quentin Grimes</td><td class="l tm">Los Angeles Lakers</td><td class="rat">14.88</td><td>1</td><td>16.0</td><td>0.0</td><td>1.0</td></tr>
+<tr><td class="rk">4</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jake LaRavia</td><td class="l tm">Los Angeles Lakers</td><td class="rat">14.53</td><td>1</td><td>12.0</td><td>3.0</td><td>2.0</td></tr>
+<tr><td class="rk">5</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Ziaire Williams</td><td class="l tm">Los Angeles Lakers</td><td class="rat">13.27</td><td>1</td><td>13.0</td><td>1.0</td><td>1.0</td></tr>
+<tr><td class="rk">6</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Chris Manon</td><td class="l tm">Los Angeles Lakers</td><td class="rat">11.33</td><td>1</td><td>12.0</td><td>5.0</td><td>1.0</td></tr>
+<tr><td class="rk">7</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Kevon Looney</td><td class="l tm">Los Angeles Lakers</td><td class="rat">7.21</td><td>1</td><td>2.0</td><td>9.0</td><td>3.0</td></tr>
+<tr><td class="rk">8</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Adou Thiero</td><td class="l tm">Los Angeles Lakers</td><td class="rat">6.64</td><td>1</td><td>3.0</td><td>4.0</td><td>4.0</td></tr>
+<tr><td class="rk">9</td><td class="fl"><img src="https://flagcdn.com/w40/ge.png" alt="" loading="lazy"></td><td class="l pl">Sandro Mamukelashvili</td><td class="l tm">Los Angeles Lakers</td><td class="rat">6.41</td><td>1</td><td>8.0</td><td>1.0</td><td>5.0</td></tr>
+<tr><td class="rk">10</td><td class="fl"><img src="https://flagcdn.com/w40/au.png" alt="" loading="lazy"></td><td class="l pl">Matisse Thybulle</td><td class="l tm">Los Angeles Lakers</td><td class="rat">6.06</td><td>1</td><td>6.0</td><td>0.0</td><td>1.0</td></tr>
+<tr><td class="rk">11</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jaden Hardy</td><td class="l tm">Los Angeles Lakers</td><td class="rat">1.60</td><td>1</td><td>8.0</td><td>1.0</td><td>1.0</td></tr>
+<tr><td class="rk">12</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">William Kyle</td><td class="l tm">Los Angeles Lakers</td><td class="rat">1.14</td><td>1</td><td>0.0</td><td>1.0</td><td>1.0</td></tr>
+<tr><td class="rk">13</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Bronny James</td><td class="l tm">Los Angeles Lakers</td><td class="rat">0.92</td><td>1</td><td>3.0</td><td>5.0</td><td>2.0</td></tr>
+<tr><td class="rk">14</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jarred Vanderbilt</td><td class="l tm">Los Angeles Lakers</td><td class="rat">0.11</td><td>1</td><td>4.0</td><td>2.0</td><td>1.0</td></tr>
+<tr><td class="rk">15</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Dalton Knecht</td><td class="l tm">Los Angeles Lakers</td><td class="rat">-0.46</td><td>1</td><td>0.0</td><td>2.0</td><td>1.0</td></tr></tbody></table></section>
+<section id="tm-memphis-grizzlies"><h3>Memphis Grizzlies</h3><table><colgroup><col class="c-rk"><col class="c-fl"><col class="c-pl"><col class="c-tm"><col class="c-rat"><col class="c-gp"><col class="c-num"><col class="c-num"><col class="c-num"></colgroup><thead><tr>
+<th></th><th></th>
+<th class="l" data-s="t">Player</th><th class="l" data-s="t"></th>
+<th data-s="n">Rat</th><th data-s="n">GP</th><th data-s="n">Pts</th>
+<th data-s="n">Reb</th><th data-s="n">Ast</th>
+</tr></thead><tbody><tr><td class="rk">1</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">GG Jackson</td><td class="l tm">Memphis Grizzlies</td><td class="rat">13.88</td><td>1</td><td>14.0</td><td>2.0</td><td>1.0</td></tr>
+<tr><td class="rk">2</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Cameron Boozer</td><td class="l tm">Memphis Grizzlies</td><td class="rat">13.19</td><td>1</td><td>11.0</td><td>5.0</td><td>4.0</td></tr>
+<tr><td class="rk">3</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jerami Grant</td><td class="l tm">Memphis Grizzlies</td><td class="rat">11.49</td><td>1</td><td>10.0</td><td>4.0</td><td>2.0</td></tr>
+<tr><td class="rk">4</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jaylen Wells</td><td class="l tm">Memphis Grizzlies</td><td class="rat">11.03</td><td>1</td><td>12.0</td><td>0.0</td><td>0.0</td></tr>
+<tr><td class="rk">5</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Cedric Coward</td><td class="l tm">Memphis Grizzlies</td><td class="rat">10.12</td><td>1</td><td>9.0</td><td>5.0</td><td>4.0</td></tr>
+<tr><td class="rk">6</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Scotty Pippen Jr</td><td class="l tm">Memphis Grizzlies</td><td class="rat">9.44</td><td>1</td><td>10.0</td><td>0.0</td><td>4.0</td></tr>
+<tr><td class="rk">7</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Ty Jerome</td><td class="l tm">Memphis Grizzlies</td><td class="rat">9.44</td><td>1</td><td>12.0</td><td>0.0</td><td>5.0</td></tr>
+<tr><td class="rk">8</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Carson Cooper</td><td class="l tm">Memphis Grizzlies</td><td class="rat">9.33</td><td>1</td><td>8.0</td><td>4.0</td><td>1.0</td></tr>
+<tr><td class="rk">9</td><td class="fl"><img src="https://flagcdn.com/w40/nl.png" alt="" loading="lazy"></td><td class="l pl">Quinten Post</td><td class="l tm">Memphis Grizzlies</td><td class="rat">7.51</td><td>1</td><td>8.0</td><td>4.0</td><td>0.0</td></tr>
+<tr><td class="rk">10</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Taylor Hendricks</td><td class="l tm">Memphis Grizzlies</td><td class="rat">7.28</td><td>1</td><td>7.0</td><td>6.0</td><td>1.0</td></tr>
+<tr><td class="rk">11</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Cam Spencer</td><td class="l tm">Memphis Grizzlies</td><td class="rat">6.71</td><td>1</td><td>8.0</td><td>4.0</td><td>2.0</td></tr>
+<tr><td class="rk">12</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Walter Clayton</td><td class="l tm">Memphis Grizzlies</td><td class="rat">4.55</td><td>1</td><td>7.0</td><td>1.0</td><td>2.0</td></tr>
+<tr><td class="rk">13</td><td class="fl"><img src="https://flagcdn.com/w40/mx.png" alt="" loading="lazy"></td><td class="l pl">Karim Lopez</td><td class="l tm">Memphis Grizzlies</td><td class="rat">4.44</td><td>1</td><td>2.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">14</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Javon Small</td><td class="l tm">Memphis Grizzlies</td><td class="rat">4.32</td><td>1</td><td>8.0</td><td>1.0</td><td>4.0</td></tr>
+<tr><td class="rk">15</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jahmai Mashack</td><td class="l tm">Memphis Grizzlies</td><td class="rat">1.93</td><td>1</td><td>2.0</td><td>1.0</td><td>1.0</td></tr>
+<tr><td class="rk">16</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Olivier-Maxence Prosper</td><td class="l tm">Memphis Grizzlies</td><td class="rat">1.71</td><td>1</td><td>1.0</td><td>1.0</td><td>1.0</td></tr>
+<tr><td class="rk">17</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Kris Murray</td><td class="l tm">Memphis Grizzlies</td><td class="rat">0.91</td><td>1</td><td>3.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">18</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Isaiah Stewart</td><td class="l tm">Memphis Grizzlies</td><td class="rat">0.34</td><td>1</td><td>0.0</td><td>1.0</td><td>0.0</td></tr></tbody></table></section>
+<section id="tm-miami-heat"><h3>Miami Heat</h3><table><colgroup><col class="c-rk"><col class="c-fl"><col class="c-pl"><col class="c-tm"><col class="c-rat"><col class="c-gp"><col class="c-num"><col class="c-num"><col class="c-num"></colgroup><thead><tr>
+<th></th><th></th>
+<th class="l" data-s="t">Player</th><th class="l" data-s="t"></th>
+<th data-s="n">Rat</th><th data-s="n">GP</th><th data-s="n">Pts</th>
+<th data-s="n">Reb</th><th data-s="n">Ast</th>
+</tr></thead><tbody><tr><td class="rk">1</td><td class="fl"><img src="https://flagcdn.com/w40/se.png" alt="" loading="lazy"></td><td class="l pl">Pelle Larsson</td><td class="l tm">Miami Heat</td><td class="rat">16.41</td><td>1</td><td>13.0</td><td>2.0</td><td>2.0</td></tr>
+<tr><td class="rk">2</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Ian Schieffelin</td><td class="l tm">Miami Heat</td><td class="rat">12.82</td><td>1</td><td>11.0</td><td>3.0</td><td>1.0</td></tr>
+<tr><td class="rk">3</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Tim Hardaway Jr</td><td class="l tm">Miami Heat</td><td class="rat">12.82</td><td>1</td><td>14.0</td><td>0.0</td><td>0.0</td></tr>
+<tr><td class="rk">4</td><td class="fl"><img src="https://flagcdn.com/w40/gr.png" alt="" loading="lazy"></td><td class="l pl">Giannis Antetokounmpo</td><td class="l tm">Miami Heat</td><td class="rat">12.39</td><td>1</td><td>9.0</td><td>4.0</td><td>7.0</td></tr>
+<tr><td class="rk">5</td><td class="fl"><img src="https://flagcdn.com/w40/ca.png" alt="" loading="lazy"></td><td class="l pl">Andrew Wiggins</td><td class="l tm">Miami Heat</td><td class="rat">10.76</td><td>1</td><td>12.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">6</td><td class="fl"><img src="https://flagcdn.com/w40/rs.png" alt="" loading="lazy"></td><td class="l pl">Nikola Jovic</td><td class="l tm">Miami Heat</td><td class="rat">10.00</td><td>1</td><td>11.0</td><td>7.0</td><td>4.0</td></tr>
+<tr><td class="rk">7</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Bez Mbeng</td><td class="l tm">Miami Heat</td><td class="rat">9.35</td><td>1</td><td>11.0</td><td>3.0</td><td>3.0</td></tr>
+<tr><td class="rk">8</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Bam Adebayo</td><td class="l tm">Miami Heat</td><td class="rat">5.33</td><td>1</td><td>10.0</td><td>6.0</td><td>0.0</td></tr>
+<tr><td class="rk">9</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">J'Vonne Hadley</td><td class="l tm">Miami Heat</td><td class="rat">4.89</td><td>1</td><td>2.0</td><td>6.0</td><td>0.0</td></tr>
+<tr><td class="rk">10</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Tre Donaldson</td><td class="l tm">Miami Heat</td><td class="rat">4.78</td><td>1</td><td>6.0</td><td>0.0</td><td>5.0</td></tr>
+<tr><td class="rk">11</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Myron Gardner</td><td class="l tm">Miami Heat</td><td class="rat">3.80</td><td>1</td><td>7.0</td><td>4.0</td><td>2.0</td></tr>
+<tr><td class="rk">12</td><td class="fl"><img src="https://flagcdn.com/w40/ru.png" alt="" loading="lazy"></td><td class="l pl">Vladislav Goldin</td><td class="l tm">Miami Heat</td><td class="rat">3.59</td><td>1</td><td>6.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">13</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Davion Mitchell</td><td class="l tm">Miami Heat</td><td class="rat">2.61</td><td>1</td><td>3.0</td><td>1.0</td><td>4.0</td></tr>
+<tr><td class="rk">14</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Bobby Portis</td><td class="l tm">Miami Heat</td><td class="rat">2.28</td><td>1</td><td>4.0</td><td>3.0</td><td>2.0</td></tr>
+<tr><td class="rk">15</td><td class="fl"><img src="https://flagcdn.com/w40/it.png" alt="" loading="lazy"></td><td class="l pl">Simone Fontecchio</td><td class="l tm">Miami Heat</td><td class="rat">2.06</td><td>1</td><td>4.0</td><td>2.0</td><td>1.0</td></tr>
+<tr><td class="rk">16</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Ryan Conwell</td><td class="l tm">Miami Heat</td><td class="rat">1.63</td><td>1</td><td>6.0</td><td>1.0</td><td>2.0</td></tr>
+<tr><td class="rk">17</td><td class="fl"><img src="https://flagcdn.com/w40/jm.png" alt="" loading="lazy"></td><td class="l pl">Nick Richards</td><td class="l tm">Miami Heat</td><td class="rat">1.41</td><td>1</td><td>0.0</td><td>7.0</td><td>0.0</td></tr>
+<tr><td class="rk">18</td><td class="fl"><img src="https://flagcdn.com/w40/do.png" alt="" loading="lazy"></td><td class="l pl">Lester Quiñones</td><td class="l tm">Miami Heat</td><td class="rat">-0.43</td><td>1</td><td>0.0</td><td>2.0</td><td>0.0</td></tr>
+<tr><td class="rk">19</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Klay Thompson</td><td class="l tm">Miami Heat</td><td class="rat">-1.52</td><td>1</td><td>0.0</td><td>2.0</td><td>0.0</td></tr></tbody></table></section>
+<section id="tm-milwaukee-bucks"><h3>Milwaukee Bucks</h3><table><colgroup><col class="c-rk"><col class="c-fl"><col class="c-pl"><col class="c-tm"><col class="c-rat"><col class="c-gp"><col class="c-num"><col class="c-num"><col class="c-num"></colgroup><thead><tr>
+<th></th><th></th>
+<th class="l" data-s="t">Player</th><th class="l" data-s="t"></th>
+<th data-s="n">Rat</th><th data-s="n">GP</th><th data-s="n">Pts</th>
+<th data-s="n">Reb</th><th data-s="n">Ast</th>
+</tr></thead><tbody><tr><td class="rk">1</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Kel'el Ware</td><td class="l tm">Milwaukee Bucks</td><td class="rat">10.27</td><td>1</td><td>14.0</td><td>12.0</td><td>0.0</td></tr>
+<tr><td class="rk">2</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Ryan Rollins</td><td class="l tm">Milwaukee Bucks</td><td class="rat">8.29</td><td>1</td><td>15.0</td><td>4.0</td><td>1.0</td></tr>
+<tr><td class="rk">3</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Gary Trent Jr</td><td class="l tm">Milwaukee Bucks</td><td class="rat">5.25</td><td>1</td><td>11.0</td><td>1.0</td><td>1.0</td></tr>
+<tr><td class="rk">4</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Myles Turner</td><td class="l tm">Milwaukee Bucks</td><td class="rat">4.79</td><td>1</td><td>7.0</td><td>5.0</td><td>1.0</td></tr>
+<tr><td class="rk">5</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Nate Ament</td><td class="l tm">Milwaukee Bucks</td><td class="rat">4.72</td><td>1</td><td>8.0</td><td>2.0</td><td>0.0</td></tr>
+<tr><td class="rk">6</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Tyler Herro</td><td class="l tm">Milwaukee Bucks</td><td class="rat">3.73</td><td>1</td><td>11.0</td><td>3.0</td><td>3.0</td></tr>
+<tr><td class="rk">7</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Brayden Burries</td><td class="l tm">Milwaukee Bucks</td><td class="rat">2.66</td><td>1</td><td>7.0</td><td>2.0</td><td>5.0</td></tr>
+<tr><td class="rk">8</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Pete Nance</td><td class="l tm">Milwaukee Bucks</td><td class="rat">2.28</td><td>1</td><td>3.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">9</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Kevin Porter</td><td class="l tm">Milwaukee Bucks</td><td class="rat">1.90</td><td>1</td><td>7.0</td><td>3.0</td><td>2.0</td></tr>
+<tr><td class="rk">10</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">AJ Green</td><td class="l tm">Milwaukee Bucks</td><td class="rat">1.60</td><td>1</td><td>6.0</td><td>5.0</td><td>2.0</td></tr>
+<tr><td class="rk">11</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jericho Sims</td><td class="l tm">Milwaukee Bucks</td><td class="rat">1.60</td><td>1</td><td>2.0</td><td>3.0</td><td>1.0</td></tr>
+<tr><td class="rk">12</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jaime Jaquez</td><td class="l tm">Milwaukee Bucks</td><td class="rat">-0.38</td><td>1</td><td>5.0</td><td>1.0</td><td>1.0</td></tr>
+<tr><td class="rk">13</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Kyle Kuzma</td><td class="l tm">Milwaukee Bucks</td><td class="rat">-1.67</td><td>1</td><td>1.0</td><td>5.0</td><td>1.0</td></tr>
+<tr><td class="rk">14</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Caris LeVert</td><td class="l tm">Milwaukee Bucks</td><td class="rat">-3.88</td><td>1</td><td>0.0</td><td>0.0</td><td>1.0</td></tr></tbody></table></section>
+<section id="tm-minnesota-timberwolves"><h3>Minnesota Timberwolves</h3><table><colgroup><col class="c-rk"><col class="c-fl"><col class="c-pl"><col class="c-tm"><col class="c-rat"><col class="c-gp"><col class="c-num"><col class="c-num"><col class="c-num"></colgroup><thead><tr>
+<th></th><th></th>
+<th class="l" data-s="t">Player</th><th class="l" data-s="t"></th>
+<th data-s="n">Rat</th><th data-s="n">GP</th><th data-s="n">Pts</th>
+<th data-s="n">Reb</th><th data-s="n">Ast</th>
+</tr></thead><tbody><tr><td class="rk">1</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Antonio Reeves</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">17.36</td><td>1</td><td>12.0</td><td>3.0</td><td>2.0</td></tr>
+<tr><td class="rk">2</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">LaMelo Ball</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">12.96</td><td>1</td><td>11.0</td><td>4.0</td><td>3.0</td></tr>
+<tr><td class="rk">3</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jaden McDaniels</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">10.34</td><td>1</td><td>9.0</td><td>3.0</td><td>1.0</td></tr>
+<tr><td class="rk">4</td><td class="fl"><img src="https://flagcdn.com/w40/fr.png" alt="" loading="lazy"></td><td class="l pl">Joan Beringer</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">8.92</td><td>1</td><td>12.0</td><td>7.0</td><td>0.0</td></tr>
+<tr><td class="rk">5</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Zyon Pullin</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">8.56</td><td>1</td><td>10.0</td><td>2.0</td><td>1.0</td></tr>
+<tr><td class="rk">6</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Anthony Edwards</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">8.44</td><td>1</td><td>14.0</td><td>4.0</td><td>2.0</td></tr>
+<tr><td class="rk">7</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Terrence Shannon</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">7.13</td><td>1</td><td>6.0</td><td>1.0</td><td>4.0</td></tr>
+<tr><td class="rk">8</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Cody Williams</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">7.01</td><td>1</td><td>5.0</td><td>2.0</td><td>4.0</td></tr>
+<tr><td class="rk">9</td><td class="fl"><img src="https://flagcdn.com/w40/cd.png" alt="" loading="lazy"></td><td class="l pl">Jonathan Kuminga</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">6.90</td><td>1</td><td>8.0</td><td>2.0</td><td>0.0</td></tr>
+<tr><td class="rk">10</td><td class="fl"><img src="https://flagcdn.com/w40/fr.png" alt="" loading="lazy"></td><td class="l pl">Rudy Gobert</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">6.54</td><td>1</td><td>6.0</td><td>7.0</td><td>0.0</td></tr>
+<tr><td class="rk">11</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Drew Timme</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">6.42</td><td>1</td><td>3.0</td><td>0.0</td><td>1.0</td></tr>
+<tr><td class="rk">12</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Ayo Dosunmu</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">3.80</td><td>1</td><td>5.0</td><td>3.0</td><td>0.0</td></tr>
+<tr><td class="rk">13</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Enrique Freeman</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">3.45</td><td>1</td><td>4.0</td><td>2.0</td><td>0.0</td></tr>
+<tr><td class="rk">14</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">KJ Martin</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">2.62</td><td>1</td><td>4.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">15</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jaylen Clark</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">2.14</td><td>1</td><td>0.0</td><td>0.0</td><td>2.0</td></tr>
+<tr><td class="rk">16</td><td class="fl"><img src="https://flagcdn.com/w40/ca.png" alt="" loading="lazy"></td><td class="l pl">Trey Lyles</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">1.90</td><td>1</td><td>3.0</td><td>2.0</td><td>0.0</td></tr>
+<tr><td class="rk">17</td><td class="fl"><img src="https://flagcdn.com/w40/ni.png" alt="" loading="lazy"></td><td class="l pl">Norchad Omier</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">1.55</td><td>1</td><td>2.0</td><td>2.0</td><td>1.0</td></tr>
+<tr><td class="rk">18</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Bones Hyland</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">0.71</td><td>1</td><td>0.0</td><td>2.0</td><td>2.0</td></tr>
+<tr><td class="rk">19</td><td class="fl"><img src="https://flagcdn.com/w40/au.png" alt="" loading="lazy"></td><td class="l pl">Rocco Zikarsky</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">-0.71</td><td>1</td><td>0.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">20</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Isaiah Evans</td><td class="l tm">Minnesota Timberwolves</td><td class="rat">-1.55</td><td>1</td><td>2.0</td><td>3.0</td><td>0.0</td></tr></tbody></table></section>
+<section id="tm-new-york-knicks"><h3>New York Knicks</h3><table><colgroup><col class="c-rk"><col class="c-fl"><col class="c-pl"><col class="c-tm"><col class="c-rat"><col class="c-gp"><col class="c-num"><col class="c-num"><col class="c-num"></colgroup><thead><tr>
+<th></th><th></th>
+<th class="l" data-s="t">Player</th><th class="l" data-s="t"></th>
+<th data-s="n">Rat</th><th data-s="n">GP</th><th data-s="n">Pts</th>
+<th data-s="n">Reb</th><th data-s="n">Ast</th>
+</tr></thead><tbody><tr><td class="rk">1</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jalen Brunson</td><td class="l tm">New York Knicks</td><td class="rat">8.29</td><td>1</td><td>12.0</td><td>4.0</td><td>3.0</td></tr>
+<tr><td class="rk">2</td><td class="fl"><img src="https://flagcdn.com/w40/gb.png" alt="" loading="lazy"></td><td class="l pl">OG Anunoby</td><td class="l tm">New York Knicks</td><td class="rat">8.29</td><td>1</td><td>12.0</td><td>6.0</td><td>0.0</td></tr>
+<tr><td class="rk">3</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Tyler Kolek</td><td class="l tm">New York Knicks</td><td class="rat">5.32</td><td>1</td><td>5.0</td><td>2.0</td><td>5.0</td></tr>
+<tr><td class="rk">4</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Landry Shamet</td><td class="l tm">New York Knicks</td><td class="rat">4.56</td><td>1</td><td>10.0</td><td>0.0</td><td>0.0</td></tr>
+<tr><td class="rk">5</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">James Wiseman</td><td class="l tm">New York Knicks</td><td class="rat">4.49</td><td>1</td><td>8.0</td><td>5.0</td><td>0.0</td></tr>
+<tr><td class="rk">6</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Andre Drummond</td><td class="l tm">New York Knicks</td><td class="rat">4.03</td><td>1</td><td>6.0</td><td>5.0</td><td>1.0</td></tr>
+<tr><td class="rk">7</td><td class="fl"><img src="https://flagcdn.com/w40/fr.png" alt="" loading="lazy"></td><td class="l pl">Mohamed Diawara</td><td class="l tm">New York Knicks</td><td class="rat">3.88</td><td>1</td><td>8.0</td><td>5.0</td><td>0.0</td></tr>
+<tr><td class="rk">8</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Kevin McCullar</td><td class="l tm">New York Knicks</td><td class="rat">2.89</td><td>1</td><td>6.0</td><td>4.0</td><td>1.0</td></tr>
+<tr><td class="rk">9</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Mikal Bridges</td><td class="l tm">New York Knicks</td><td class="rat">2.51</td><td>1</td><td>3.0</td><td>3.0</td><td>3.0</td></tr>
+<tr><td class="rk">10</td><td class="fl"><img src="https://flagcdn.com/w40/do.png" alt="" loading="lazy"></td><td class="l pl">Karl-Anthony Towns</td><td class="l tm">New York Knicks</td><td class="rat">2.36</td><td>1</td><td>5.0</td><td>5.0</td><td>2.0</td></tr>
+<tr><td class="rk">11</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jaden Akins</td><td class="l tm">New York Knicks</td><td class="rat">1.75</td><td>1</td><td>3.0</td><td>0.0</td><td>3.0</td></tr>
+<tr><td class="rk">12</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Tony Bradley</td><td class="l tm">New York Knicks</td><td class="rat">1.29</td><td>1</td><td>2.0</td><td>0.0</td><td>0.0</td></tr>
+<tr><td class="rk">13</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jordan Clarkson</td><td class="l tm">New York Knicks</td><td class="rat">0.84</td><td>1</td><td>6.0</td><td>4.0</td><td>1.0</td></tr>
+<tr><td class="rk">14</td><td class="fl"><img src="https://flagcdn.com/w40/ci.png" alt="" loading="lazy"></td><td class="l pl">Pacome Dadiet</td><td class="l tm">New York Knicks</td><td class="rat">0.68</td><td>1</td><td>5.0</td><td>3.0</td><td>0.0</td></tr>
+<tr><td class="rk">15</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Josh Hart</td><td class="l tm">New York Knicks</td><td class="rat">0.15</td><td>1</td><td>2.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">16</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Tyler Nickel</td><td class="l tm">New York Knicks</td><td class="rat">-0.61</td><td>1</td><td>0.0</td><td>1.0</td><td>1.0</td></tr>
+<tr><td class="rk">17</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Miles McBride</td><td class="l tm">New York Knicks</td><td class="rat">-0.61</td><td>1</td><td>0.0</td><td>1.0</td><td>3.0</td></tr>
+<tr><td class="rk">18</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Drew Eubanks</td><td class="l tm">New York Knicks</td><td class="rat">-0.68</td><td>1</td><td>1.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">19</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Ochai Agbaji</td><td class="l tm">New York Knicks</td><td class="rat">-0.91</td><td>1</td><td>1.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">20</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Bruce Brown</td><td class="l tm">New York Knicks</td><td class="rat">-1.75</td><td>1</td><td>2.0</td><td>0.0</td><td>0.0</td></tr></tbody></table></section>
+<section id="tm-philadelphia-76ers"><h3>Philadelphia 76ers</h3><table><colgroup><col class="c-rk"><col class="c-fl"><col class="c-pl"><col class="c-tm"><col class="c-rat"><col class="c-gp"><col class="c-num"><col class="c-num"><col class="c-num"></colgroup><thead><tr>
+<th></th><th></th>
+<th class="l" data-s="t">Player</th><th class="l" data-s="t"></th>
+<th data-s="n">Rat</th><th data-s="n">GP</th><th data-s="n">Pts</th>
+<th data-s="n">Reb</th><th data-s="n">Ast</th>
+</tr></thead><tbody><tr><td class="rk">1</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jaylen Brown</td><td class="l tm">Philadelphia 76ers</td><td class="rat">20.79</td><td>1</td><td>22.0</td><td>2.0</td><td>2.0</td></tr>
+<tr><td class="rk">2</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Caleb Love</td><td class="l tm">Philadelphia 76ers</td><td class="rat">17.94</td><td>1</td><td>15.0</td><td>3.0</td><td>6.0</td></tr>
+<tr><td class="rk">3</td><td class="fl"><img src="https://flagcdn.com/w40/bs.png" alt="" loading="lazy"></td><td class="l pl">VJ Edgecombe</td><td class="l tm">Philadelphia 76ers</td><td class="rat">14.97</td><td>1</td><td>12.0</td><td>4.0</td><td>7.0</td></tr>
+<tr><td class="rk">4</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Saint Thomas</td><td class="l tm">Philadelphia 76ers</td><td class="rat">12.71</td><td>1</td><td>11.0</td><td>10.0</td><td>1.0</td></tr>
+<tr><td class="rk">5</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jabari Walker</td><td class="l tm">Philadelphia 76ers</td><td class="rat">11.76</td><td>1</td><td>11.0</td><td>11.0</td><td>1.0</td></tr>
+<tr><td class="rk">6</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Dillon Jones</td><td class="l tm">Philadelphia 76ers</td><td class="rat">11.64</td><td>1</td><td>11.0</td><td>6.0</td><td>2.0</td></tr>
+<tr><td class="rk">7</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Kentavious Caldwell-Pope</td><td class="l tm">Philadelphia 76ers</td><td class="rat">7.84</td><td>1</td><td>7.0</td><td>2.0</td><td>2.0</td></tr>
+<tr><td class="rk">8</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jameer Nelson Jr</td><td class="l tm">Philadelphia 76ers</td><td class="rat">5.11</td><td>1</td><td>7.0</td><td>2.0</td><td>0.0</td></tr>
+<tr><td class="rk">9</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Justin Edwards</td><td class="l tm">Philadelphia 76ers</td><td class="rat">4.87</td><td>1</td><td>6.0</td><td>1.0</td><td>1.0</td></tr>
+<tr><td class="rk">10</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Labaron Philon</td><td class="l tm">Philadelphia 76ers</td><td class="rat">4.16</td><td>1</td><td>6.0</td><td>2.0</td><td>4.0</td></tr>
+<tr><td class="rk">11</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Dean Wade</td><td class="l tm">Philadelphia 76ers</td><td class="rat">2.85</td><td>1</td><td>2.0</td><td>5.0</td><td>0.0</td></tr>
+<tr><td class="rk">12</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Duke Miles</td><td class="l tm">Philadelphia 76ers</td><td class="rat">1.78</td><td>1</td><td>4.0</td><td>1.0</td><td>1.0</td></tr>
+<tr><td class="rk">13</td><td class="fl"><img src="https://flagcdn.com/w40/fr.png" alt="" loading="lazy"></td><td class="l pl">Rayan Rupert</td><td class="l tm">Philadelphia 76ers</td><td class="rat">0.59</td><td>1</td><td>6.0</td><td>4.0</td><td>1.0</td></tr>
+<tr><td class="rk">14</td><td class="fl"><img src="https://flagcdn.com/w40/de.png" alt="" loading="lazy"></td><td class="l pl">Ariel Hukporti</td><td class="l tm">Philadelphia 76ers</td><td class="rat">0.00</td><td>1</td><td>0.0</td><td>0.0</td><td>1.0</td></tr></tbody></table></section>
+<section id="tm-phoenix-suns"><h3>Phoenix Suns</h3><table><colgroup><col class="c-rk"><col class="c-fl"><col class="c-pl"><col class="c-tm"><col class="c-rat"><col class="c-gp"><col class="c-num"><col class="c-num"><col class="c-num"></colgroup><thead><tr>
+<th></th><th></th>
+<th class="l" data-s="t">Player</th><th class="l" data-s="t"></th>
+<th data-s="n">Rat</th><th data-s="n">GP</th><th data-s="n">Pts</th>
+<th data-s="n">Reb</th><th data-s="n">Ast</th>
+</tr></thead><tbody><tr><td class="rk">1</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Devin Booker</td><td class="l tm">Phoenix Suns</td><td class="rat">8.09</td><td>1</td><td>13.0</td><td>3.0</td><td>3.0</td></tr>
+<tr><td class="rk">2</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jordan Goodwin</td><td class="l tm">Phoenix Suns</td><td class="rat">6.73</td><td>1</td><td>7.0</td><td>6.0</td><td>1.0</td></tr>
+<tr><td class="rk">3</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Miles Bridges</td><td class="l tm">Phoenix Suns</td><td class="rat">6.58</td><td>1</td><td>8.0</td><td>5.0</td><td>4.0</td></tr>
+<tr><td class="rk">4</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jalen Green</td><td class="l tm">Phoenix Suns</td><td class="rat">5.67</td><td>1</td><td>11.0</td><td>2.0</td><td>1.0</td></tr>
+<tr><td class="rk">5</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Collin Gillespie</td><td class="l tm">Phoenix Suns</td><td class="rat">5.07</td><td>1</td><td>8.0</td><td>1.0</td><td>1.0</td></tr>
+<tr><td class="rk">6</td><td class="fl"><img src="https://flagcdn.com/w40/ca.png" alt="" loading="lazy"></td><td class="l pl">Dillon Brooks</td><td class="l tm">Phoenix Suns</td><td class="rat">5.07</td><td>1</td><td>11.0</td><td>2.0</td><td>0.0</td></tr>
+<tr><td class="rk">7</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Kennedy Chandler</td><td class="l tm">Phoenix Suns</td><td class="rat">4.99</td><td>1</td><td>8.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">8</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Luke Kennard</td><td class="l tm">Phoenix Suns</td><td class="rat">4.76</td><td>1</td><td>9.0</td><td>2.0</td><td>2.0</td></tr>
+<tr><td class="rk">9</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Oso Ighodaro</td><td class="l tm">Phoenix Suns</td><td class="rat">3.63</td><td>1</td><td>3.0</td><td>5.0</td><td>2.0</td></tr>
+<tr><td class="rk">10</td><td class="fl"><img src="https://flagcdn.com/w40/ss.png" alt="" loading="lazy"></td><td class="l pl">Khaman Maluach</td><td class="l tm">Phoenix Suns</td><td class="rat">1.89</td><td>1</td><td>6.0</td><td>2.0</td><td>0.0</td></tr>
+<tr><td class="rk">11</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Rasheer Fleming</td><td class="l tm">Phoenix Suns</td><td class="rat">1.36</td><td>1</td><td>3.0</td><td>5.0</td><td>1.0</td></tr>
+<tr><td class="rk">12</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jamaree Bouyea</td><td class="l tm">Phoenix Suns</td><td class="rat">1.29</td><td>1</td><td>9.0</td><td>2.0</td><td>2.0</td></tr>
+<tr><td class="rk">13</td><td class="fl"><img src="https://flagcdn.com/w40/au.png" alt="" loading="lazy"></td><td class="l pl">Duop Reath</td><td class="l tm">Phoenix Suns</td><td class="rat">-0.45</td><td>1</td><td>2.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">14</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Ryan Dunn</td><td class="l tm">Phoenix Suns</td><td class="rat">-0.61</td><td>1</td><td>2.0</td><td>2.0</td><td>1.0</td></tr>
+<tr><td class="rk">15</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Pat Spencer</td><td class="l tm">Phoenix Suns</td><td class="rat">-0.83</td><td>1</td><td>1.0</td><td>0.0</td><td>1.0</td></tr>
+<tr><td class="rk">16</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Haywood Highsmith</td><td class="l tm">Phoenix Suns</td><td class="rat">-1.29</td><td>1</td><td>2.0</td><td>4.0</td><td>0.0</td></tr>
+<tr><td class="rk">17</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Koa Peat</td><td class="l tm">Phoenix Suns</td><td class="rat">-1.44</td><td>1</td><td>4.0</td><td>4.0</td><td>0.0</td></tr></tbody></table></section>
+<section id="tm-sacramento-kings"><h3>Sacramento Kings</h3><table><colgroup><col class="c-rk"><col class="c-fl"><col class="c-pl"><col class="c-tm"><col class="c-rat"><col class="c-gp"><col class="c-num"><col class="c-num"><col class="c-num"></colgroup><thead><tr>
+<th></th><th></th>
+<th class="l" data-s="t">Player</th><th class="l" data-s="t"></th>
+<th data-s="n">Rat</th><th data-s="n">GP</th><th data-s="n">Pts</th>
+<th data-s="n">Reb</th><th data-s="n">Ast</th>
+</tr></thead><tbody><tr><td class="rk">1</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Nique Clifford</td><td class="l tm">Sacramento Kings</td><td class="rat">13.62</td><td>1</td><td>23.0</td><td>9.0</td><td>2.0</td></tr>
+<tr><td class="rk">2</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Dylan Cardwell</td><td class="l tm">Sacramento Kings</td><td class="rat">7.76</td><td>1</td><td>9.0</td><td>10.0</td><td>3.0</td></tr>
+<tr><td class="rk">3</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Darius Acuff</td><td class="l tm">Sacramento Kings</td><td class="rat">6.96</td><td>1</td><td>19.0</td><td>2.0</td><td>4.0</td></tr>
+<tr><td class="rk">4</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Daeqwon Plowden</td><td class="l tm">Sacramento Kings</td><td class="rat">4.03</td><td>1</td><td>12.0</td><td>5.0</td><td>1.0</td></tr>
+<tr><td class="rk">5</td><td class="fl"><img src="https://flagcdn.com/w40/fr.png" alt="" loading="lazy"></td><td class="l pl">Maxime Raynaud</td><td class="l tm">Sacramento Kings</td><td class="rat">3.73</td><td>1</td><td>12.0</td><td>8.0</td><td>2.0</td></tr>
+<tr><td class="rk">6</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Zach LaVine</td><td class="l tm">Sacramento Kings</td><td class="rat">3.15</td><td>1</td><td>9.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">7</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Alex Karaban</td><td class="l tm">Sacramento Kings</td><td class="rat">3.08</td><td>1</td><td>3.0</td><td>3.0</td><td>2.0</td></tr>
+<tr><td class="rk">8</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">De'Andre Hunter</td><td class="l tm">Sacramento Kings</td><td class="rat">1.61</td><td>1</td><td>3.0</td><td>0.0</td><td>0.0</td></tr>
+<tr><td class="rk">9</td><td class="fl"><img src="https://flagcdn.com/w40/ng.png" alt="" loading="lazy"></td><td class="l pl">Precious Achiuwa</td><td class="l tm">Sacramento Kings</td><td class="rat">1.32</td><td>1</td><td>2.0</td><td>1.0</td><td>1.0</td></tr>
+<tr><td class="rk">10</td><td class="fl"><img src="https://flagcdn.com/w40/lt.png" alt="" loading="lazy"></td><td class="l pl">Domantas Sabonis</td><td class="l tm">Sacramento Kings</td><td class="rat">1.03</td><td>1</td><td>4.0</td><td>3.0</td><td>3.0</td></tr>
+<tr><td class="rk">11</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Elfrid Payton</td><td class="l tm">Sacramento Kings</td><td class="rat">0.15</td><td>1</td><td>0.0</td><td>3.0</td><td>0.0</td></tr>
+<tr><td class="rk">12</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Adam Flagler</td><td class="l tm">Sacramento Kings</td><td class="rat">0.00</td><td>1</td><td>0.0</td><td>0.0</td><td>0.0</td></tr>
+<tr><td class="rk">13</td><td class="fl"><img src="https://flagcdn.com/w40/il.png" alt="" loading="lazy"></td><td class="l pl">Emanuel Sharp</td><td class="l tm">Sacramento Kings</td><td class="rat">-0.88</td><td>1</td><td>7.0</td><td>1.0</td><td>2.0</td></tr></tbody></table></section>
+<section id="tm-toronto-raptors"><h3>Toronto Raptors</h3><table><colgroup><col class="c-rk"><col class="c-fl"><col class="c-pl"><col class="c-tm"><col class="c-rat"><col class="c-gp"><col class="c-num"><col class="c-num"><col class="c-num"></colgroup><thead><tr>
+<th></th><th></th>
+<th class="l" data-s="t">Player</th><th class="l" data-s="t"></th>
+<th data-s="n">Rat</th><th data-s="n">GP</th><th data-s="n">Pts</th>
+<th data-s="n">Reb</th><th data-s="n">Ast</th>
+</tr></thead><tbody><tr><td class="rk">1</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Chucky Hepburn</td><td class="l tm">Toronto Raptors</td><td class="rat">8.42</td><td>1</td><td>11.0</td><td>5.0</td><td>2.0</td></tr>
+<tr><td class="rk">2</td><td class="fl"><img src="https://flagcdn.com/w40/ca.png" alt="" loading="lazy"></td><td class="l pl">RJ Barrett</td><td class="l tm">Toronto Raptors</td><td class="rat">7.44</td><td>1</td><td>15.0</td><td>3.0</td><td>1.0</td></tr>
+<tr><td class="rk">3</td><td class="fl"><img src="https://flagcdn.com/w40/at.png" alt="" loading="lazy"></td><td class="l pl">Jakob Poeltl</td><td class="l tm">Toronto Raptors</td><td class="rat">6.33</td><td>1</td><td>9.0</td><td>1.0</td><td>1.0</td></tr>
+<tr><td class="rk">4</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Tyreke Key</td><td class="l tm">Toronto Raptors</td><td class="rat">6.12</td><td>1</td><td>15.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">5</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jaden Bradley</td><td class="l tm">Toronto Raptors</td><td class="rat">5.77</td><td>1</td><td>9.0</td><td>3.0</td><td>2.0</td></tr>
+<tr><td class="rk">6</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Scottie Barnes</td><td class="l tm">Toronto Raptors</td><td class="rat">4.52</td><td>1</td><td>11.0</td><td>2.0</td><td>2.0</td></tr>
+<tr><td class="rk">7</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jamal Shead</td><td class="l tm">Toronto Raptors</td><td class="rat">3.89</td><td>1</td><td>3.0</td><td>5.0</td><td>8.0</td></tr>
+<tr><td class="rk">8</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Collin Murray-Boyles</td><td class="l tm">Toronto Raptors</td><td class="rat">2.78</td><td>1</td><td>6.0</td><td>9.0</td><td>1.0</td></tr>
+<tr><td class="rk">9</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Ja'Kobe Walter</td><td class="l tm">Toronto Raptors</td><td class="rat">2.78</td><td>1</td><td>8.0</td><td>5.0</td><td>1.0</td></tr>
+<tr><td class="rk">10</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Immanuel Quickley</td><td class="l tm">Toronto Raptors</td><td class="rat">2.71</td><td>1</td><td>5.0</td><td>2.0</td><td>3.0</td></tr>
+<tr><td class="rk">11</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Malachi Smith</td><td class="l tm">Toronto Raptors</td><td class="rat">2.16</td><td>1</td><td>7.0</td><td>4.0</td><td>2.0</td></tr>
+<tr><td class="rk">12</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Nimari Burnett</td><td class="l tm">Toronto Raptors</td><td class="rat">-2.09</td><td>1</td><td>6.0</td><td>3.0</td><td>3.0</td></tr></tbody></table></section>
+<section id="tm-utah-jazz"><h3>Utah Jazz</h3><table><colgroup><col class="c-rk"><col class="c-fl"><col class="c-pl"><col class="c-tm"><col class="c-rat"><col class="c-gp"><col class="c-num"><col class="c-num"><col class="c-num"></colgroup><thead><tr>
+<th></th><th></th>
+<th class="l" data-s="t">Player</th><th class="l" data-s="t"></th>
+<th data-s="n">Rat</th><th data-s="n">GP</th><th data-s="n">Pts</th>
+<th data-s="n">Reb</th><th data-s="n">Ast</th>
+</tr></thead><tbody><tr><td class="rk">1</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Blake Hinson</td><td class="l tm">Utah Jazz</td><td class="rat">16.66</td><td>1</td><td>14.0</td><td>6.0</td><td>0.0</td></tr>
+<tr><td class="rk">2</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Keyonte George</td><td class="l tm">Utah Jazz</td><td class="rat">15.00</td><td>1</td><td>15.0</td><td>4.0</td><td>3.0</td></tr>
+<tr><td class="rk">3</td><td class="fl"><img src="https://flagcdn.com/w40/fi.png" alt="" loading="lazy"></td><td class="l pl">Lauri Markkanen</td><td class="l tm">Utah Jazz</td><td class="rat">14.87</td><td>1</td><td>17.0</td><td>2.0</td><td>0.0</td></tr>
+<tr><td class="rk">4</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Isaiah Collier</td><td class="l tm">Utah Jazz</td><td class="rat">13.59</td><td>1</td><td>9.0</td><td>4.0</td><td>4.0</td></tr>
+<tr><td class="rk">5</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jaren Jackson Jr</td><td class="l tm">Utah Jazz</td><td class="rat">10.90</td><td>1</td><td>11.0</td><td>4.0</td><td>2.0</td></tr>
+<tr><td class="rk">6</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Mo Bamba</td><td class="l tm">Utah Jazz</td><td class="rat">10.64</td><td>1</td><td>6.0</td><td>7.0</td><td>2.0</td></tr>
+<tr><td class="rk">7</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Ace Bailey</td><td class="l tm">Utah Jazz</td><td class="rat">9.10</td><td>1</td><td>10.0</td><td>5.0</td><td>0.0</td></tr>
+<tr><td class="rk">8</td><td class="fl"><img src="https://flagcdn.com/w40/ba.png" alt="" loading="lazy"></td><td class="l pl">Jusuf Nurkic</td><td class="l tm">Utah Jazz</td><td class="rat">7.69</td><td>1</td><td>4.0</td><td>5.0</td><td>4.0</td></tr>
+<tr><td class="rk">9</td><td class="fl"><img src="https://flagcdn.com/w40/ua.png" alt="" loading="lazy"></td><td class="l pl">Sviatoslav Mykhailiuk</td><td class="l tm">Utah Jazz</td><td class="rat">7.69</td><td>1</td><td>9.0</td><td>0.0</td><td>3.0</td></tr>
+<tr><td class="rk">10</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jaxson Hayes</td><td class="l tm">Utah Jazz</td><td class="rat">6.54</td><td>1</td><td>2.0</td><td>3.0</td><td>4.0</td></tr>
+<tr><td class="rk">11</td><td class="fl"><img src="https://flagcdn.com/w40/ng.png" alt="" loading="lazy"></td><td class="l pl">Josh Okogie</td><td class="l tm">Utah Jazz</td><td class="rat">2.95</td><td>1</td><td>3.0</td><td>1.0</td><td>1.0</td></tr>
+<tr><td class="rk">12</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Darryn Peterson</td><td class="l tm">Utah Jazz</td><td class="rat">1.15</td><td>1</td><td>3.0</td><td>6.0</td><td>2.0</td></tr>
+<tr><td class="rk">13</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Harrison Ingram</td><td class="l tm">Utah Jazz</td><td class="rat">1.03</td><td>1</td><td>6.0</td><td>1.0</td><td>0.0</td></tr>
+<tr><td class="rk">14</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Jonas Aidoo</td><td class="l tm">Utah Jazz</td><td class="rat">-0.13</td><td>1</td><td>0.0</td><td>2.0</td><td>0.0</td></tr>
+<tr><td class="rk">15</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Tamar Bates</td><td class="l tm">Utah Jazz</td><td class="rat">-3.33</td><td>1</td><td>0.0</td><td>2.0</td><td>1.0</td></tr>
+<tr><td class="rk">16</td><td class="fl"><img src="https://flagcdn.com/w40/us.png" alt="" loading="lazy"></td><td class="l pl">Trey Alexander</td><td class="l tm">Utah Jazz</td><td class="rat">-3.72</td><td>1</td><td>0.0</td><td>2.0</td><td>2.0</td></tr></tbody></table></section>
+</div>
+<script>
+// Show one league, hide the rest. GLOBAL on purpose: the select's onchange
+// attribute can only reach a function on window, and the rest of this file is
+// wrapped in an IIFE that keeps its own helpers private.
+//
+// Nothing is fetched and nothing is built -- every league is already in the
+// page -- so switching is a visibility change, and the tables inside keep
+// whatever sort the reader left them in.
+function pick(id){
+  var all = document.getElementsByClassName("lg");
+  for(var i = 0; i < all.length; i++){
+    all[i].className = (all[i].id === id) ? "lg lg-on" : "lg";
+  }
+}
+
+(function(){
+  // SORTING AND THE TOGGLE, PER TABLE, so one section's state does not follow the
+  // reader into another.
+  [].slice.call(document.querySelectorAll("table")).forEach(function(tbl){
+    var tb = tbl.querySelector("tbody");
+    if(!tb) return;
+    var all = [].slice.call(tb.querySelectorAll("tr"));
+    var key = -1, desc = true;
+
+    var ths = [].slice.call(tbl.querySelectorAll("thead th"));
+    ths.forEach(function(th, i){
+      if(!th.getAttribute("data-s")) return;
+      th.addEventListener("click", function(){
+        // The same column again reverses; a new one starts descending, which is
+        // what a reader wants from a rating and from every per-game figure here.
+        if(key === i) desc = !desc; else { key = i; desc = true; }
+        var numeric = th.getAttribute("data-s") === "n";
+        all.sort(function(a, b){
+          var x = a.cells[i].textContent.trim(), y = b.cells[i].textContent.trim();
+          if(numeric){
+            var nx = parseFloat(x) || 0, ny = parseFloat(y) || 0;
+            return desc ? ny - nx : nx - ny;
+          }
+          return desc ? y.localeCompare(x) : x.localeCompare(y);
+        });
+        ths.forEach(function(o){ o.removeAttribute("aria-sort"); });
+        th.setAttribute("aria-sort", desc ? "descending" : "ascending");
+        draw();
+      });
+    });
+
+    function draw(){
+      var show = all;
+      tb.innerHTML = "";
+      var keep = tbl.getAttribute("data-rank") === "keep";
+      show.forEach(function(r, n){
+        // Renumbered so a sorted list reads 1..N -- EXCEPT where the number is a
+        // league position rather than a row count, which a team table carries and
+        // must not lose the moment someone sorts it.
+        if(!keep) r.cells[0].textContent = n + 1;
+        r.className = "";
+        tb.appendChild(r);
+      });
+    }
+  });
+})();
+</script>
+</body></html>
